@@ -15,12 +15,12 @@ import java.util.Optional;
 public class GroupUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserRepository repository;
+    private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> user = repository.findByUserName(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Optional<User> user = userRepository.findByEmail(email);
         return user.map(GroupUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException(username + " Not Found"));
+                .orElseThrow(() -> new UsernameNotFoundException(email + " Not Found"));
     }
 }

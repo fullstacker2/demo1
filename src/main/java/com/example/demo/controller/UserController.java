@@ -14,6 +14,7 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 public class UserController {
 
     @Autowired
-    private UserRepository repository;
+    private UserRepository userRepository;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -31,8 +32,8 @@ public class UserController {
         user.setRoles(UserConstant.DEFAULT_ROLE);//USER
         String encryptedPwd = passwordEncoder.encode(user.getPassword());
         user.setPassword(encryptedPwd);
-        repository.save(user);
-        return "Hi " + user.getUserName() + " welcome to group !";
+        userRepository.save(user);
+        return "Hi " + user.getEmail() + " welcome to group !";
     }
     //If loggedin user is ADMIN -> ADMIN OR MODERATOR
     //If loggedin user is MODERATOR -> MODERATOR
@@ -41,22 +42,22 @@ public class UserController {
     //@Secured("ROLE_ADMIN")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MODERATOR')")
     public String giveAccessToUser(@PathVariable int userId, @PathVariable String userRole, Principal principal) {
-        User user = repository.findById(userId).get();
+        User user = userRepository.findById(userId).get();
         List<String> activeRoles = getRolesByLoggedInUser(principal);
         String newRole = "";
         if (activeRoles.contains(userRole)) {
             newRole = user.getRoles() + "," + userRole;
             user.setRoles(newRole);
         }
-        repository.save(user);
-        return "Hi " + user.getUserName() + " New Role assign to you by " + principal.getName();
+        userRepository.save(user);
+        return "Hi " + user.getEmail() + " New Role assign to you by " + principal.getName();
     }
 
     @GetMapping
     @Secured("ROLE_ADMIN")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public List<User> loadUsers() {
-        return repository.findAll();
+        return userRepository.findAll();
     }
 
     @GetMapping("/test")
@@ -65,6 +66,16 @@ public class UserController {
         return "user can only access this !";
     }
 
+    @PostMapping("/addUser")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public void addUser(@RequestBody Map<String,Object> map) {
+        User newUser = new User();
+        newUser.setEmail(map.get("email").toString());
+        String password = "XhjE3_P&";  // make it randomly generated
+        String encryptedPwd = passwordEncoder.encode(password);
+        newUser.setPassword(encryptedPwd);
+        userRepository.save((newUser));
+    }
     private List<String> getRolesByLoggedInUser(Principal principal) {
         String roles = getLoggedInUser(principal).getRoles();
         List<String> assignRoles = Arrays.stream(roles.split(",")).collect(Collectors.toList());
@@ -78,6 +89,6 @@ public class UserController {
     }
 
     private User getLoggedInUser(Principal principal) {
-        return repository.findByUserName(principal.getName()).get();
+        return userRepository.findByEmail(principal.getName()).get();
     }
 }

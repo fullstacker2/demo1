@@ -12,13 +12,13 @@ import java.util.stream.Collectors;
 
 public class GroupUserDetails implements UserDetails {
 
-    private String userName;
+    private String email;
     private String password;
     private boolean isActive;
     private List<GrantedAuthority> authorities;
 
     public GroupUserDetails(User user) {
-        this.userName = user.getUserName();
+        this.email = user.getEmail();
         this.password = user.getPassword();
         this.isActive = user.isActive();
         this.authorities = Arrays.stream(user.getRoles().split(","))
@@ -37,9 +37,7 @@ public class GroupUserDetails implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
-        return userName;
-    }
+    public String getUsername() { return email; }  // getUsername is the default method which should be overridden
 
     @Override
     public boolean isAccountNonExpired() {
