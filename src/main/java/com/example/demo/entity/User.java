@@ -22,6 +22,8 @@ public class User {
     private int id;
     private String email;
     private String password;
+    private String first_name;
+    private String last_name;
     private boolean active;
     private String roles; //ROLE_USER,ROLE_ADMIN
 }
