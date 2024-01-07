@@ -11,6 +11,7 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,7 +23,6 @@ public class UserService {
     private BCryptPasswordEncoder passwordEncoder;
 
     public String addUser(String email, String role) {
-
         User newUser = new User();
         newUser.setEmail(email);
         String password = "XhjE3_P&";  // make it randomly generated
@@ -41,7 +41,12 @@ public class UserService {
 
     public String changeRole(int userId, String userRole, Principal principal)
     {
-        User user = userRepository.findById(userId).get();
+        Optional<User> optUser = userRepository.findById(userId);
+        if(optUser.isEmpty()) {
+            throw new RuntimeException("given User doesn't exist");
+        }
+
+        User user = optUser.get();
         List<String> activeRoles = getRolesByLoggedInUser(principal);
         String newRole;
         if (activeRoles.contains(userRole)) {
@@ -49,22 +54,22 @@ public class UserService {
             user.setRoles(newRole);
         }
         userRepository.save(user);
-        return "Hi " + user.getEmail() + " New Role assign to you by " + principal.getName();
+        return "Hi " + user.getEmail() + ", new Role assigned to you by " + principal.getName();
     }
 
-    public String deleteUser(int id) {
+    public String deleteUser(int userId) {
         // write your logic
-        return "User with id: "+ id + "is deleted";
+        return "User with id: "+ userId + "is deleted";
     }
 
     private List<String> getRolesByLoggedInUser(Principal principal) {
         String roles = getLoggedInUser(principal).getRoles();
         List<String> assignRoles = Arrays.stream(roles.split(",")).toList();
+        if (assignRoles.contains("ROLE_SUPERADMIN")) {
+            return Arrays.stream(UserConstant.SUPERADMIN_ACCESS).collect(Collectors.toList());
+        }
         if (assignRoles.contains("ROLE_ADMIN")) {
             return Arrays.stream(UserConstant.ADMIN_ACCESS).collect(Collectors.toList());
-        }
-        if (assignRoles.contains("ROLE_MODERATOR")) {
-            return Arrays.stream(UserConstant.MODERATOR_ACCESS).collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
