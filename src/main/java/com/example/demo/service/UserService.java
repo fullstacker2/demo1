@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,18 +77,76 @@ public class UserService {
     }
 
     private String AutoPassword() {
-        String upper="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        String lower="abcdefghijklmnopqrstuvwxyz";
-        String num="0123456789";
-        String specialChars="<>,. ?/}]{]+_-) (*&^%$#@!=";
-        String combination=upper+lower+specialChars+num;
-        int len = 8;
-        char[] password=new char[len];
-        Random r = new Random();
-        for(int i=0;i<len;i++) {
-            password[i]=combination.charAt(r.nextInt(combination.length()));
+        SecureRandom random = new SecureRandom();
+
+        // Define character sets
+        String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String specialChars = "!@#$%^&*()-_+=<>?";
+
+        // Initialize variables
+        StringBuilder passwordBuilder = new StringBuilder();
+        boolean hasUpperCase = false;
+        boolean hasLowerCase = false;
+        boolean hasDigit = false;
+        boolean hasSpecialChar = false;
+
+        // Add at least one uppercase character
+        passwordBuilder.append(upperCase.charAt(random.nextInt(upperCase.length())));
+        hasUpperCase = true;
+
+        // Add at least one lowercase character
+        passwordBuilder.append(lowerCase.charAt(random.nextInt(lowerCase.length())));
+        hasLowerCase = true;
+
+        // Add at least one digit
+        passwordBuilder.append(digits.charAt(random.nextInt(digits.length())));
+        hasDigit = true;
+
+        // Add at least one special character
+        passwordBuilder.append(specialChars.charAt(random.nextInt(specialChars.length())));
+        hasSpecialChar = true;
+
+        // Fill the remaining characters
+        for (int i = 4; i < 12; i++) {
+            int choice = random.nextInt(4); // 0 for uppercase, 1 for lowercase, 2 for digit, 3 for special char
+
+            switch (choice) {
+                case 0:
+                    passwordBuilder.append(upperCase.charAt(random.nextInt(upperCase.length())));
+                    hasUpperCase = true;
+                    break;
+                case 1:
+                    passwordBuilder.append(lowerCase.charAt(random.nextInt(lowerCase.length())));
+                    hasLowerCase = true;
+                    break;
+                case 2:
+                    passwordBuilder.append(digits.charAt(random.nextInt(digits.length())));
+                    hasDigit = true;
+                    break;
+                case 3:
+                    passwordBuilder.append(specialChars.charAt(random.nextInt(specialChars.length())));
+                    hasSpecialChar = true;
+                    break;
+            }
         }
-        return new String(password);
+
+        // Shuffle the characters in the password
+        char[] passwordArray = passwordBuilder.toString().toCharArray();
+        for (int i = passwordArray.length - 1; i > 0; i--) {
+            int index = random.nextInt(i + 1);
+            char temp = passwordArray[index];
+            passwordArray[index] = passwordArray[i];
+            passwordArray[i] = temp;
+        }
+
+        // Ensure all criteria are met
+        if (!hasUpperCase || !hasLowerCase || !hasDigit || !hasSpecialChar) {
+            // Regenerate the password if any criteria is not met
+            return AutoPassword();
+        }
+        return new String(passwordArray);
     }
 
     /*
