@@ -39,10 +39,10 @@ public class UserController {
 
     // admin or super admin can change role of a user (NEED TO CHANGE TO ONLY SUPERADMIN)
     // also change userRole as RequestBody maybe
-    @GetMapping("/access/{user_id}/{userRole}")
-    @PreAuthorize("hasAuthority('ROLE_SUPERADMIN') or hasAuthority('ROLE_ADMIN')")
-    public String changeRole(@PathVariable int user_id, @PathVariable String userRole, Principal principal) {
-        return userService.changeRole(user_id, userRole, principal);
+    @PostMapping("/changeRole/{user_id}")
+    @PreAuthorize("hasAuthority('ROLE_SUPERADMIN')")
+    public String changeRole(@PathVariable int user_id, @RequestBody Map<String,Object> map, Principal principal) {
+        return userService.changeRole(user_id, map.get("role").toString(), principal);
     }
 
     @GetMapping("/delete/{user_id}")

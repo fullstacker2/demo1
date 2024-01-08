@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +22,7 @@ public class UserService {
     public String addUser(String email, String role) {
         User newUser = new User();
         newUser.setEmail(email);
-        String password = "XhjE3_P&";  // make it randomly generated
+        String password = AutoPassword();  // make it randomly generated
         String encryptedPwd = passwordEncoder.encode(password);
         newUser.setPassword(encryptedPwd);
         newUser.setRoles(role);
@@ -54,7 +51,7 @@ public class UserService {
         return "Successfully updated password for "+ first_name + " " + last_name;
     }
 
-    public String changeRole(int user_id, String userRole, Principal principal)
+    public String changeRole(int user_id, String user_role, Principal principal)
     {
         Optional<User> optUser = userRepository.findById(user_id);
         if(optUser.isEmpty()) {
@@ -62,12 +59,9 @@ public class UserService {
         }
 
         User user = optUser.get();
-        List<String> activeRoles = getRolesByLoggedInUser(principal);
-        String newRole;
-        if (activeRoles.contains(userRole)) {
-            newRole = user.getRoles() + "," + userRole;
-            user.setRoles(newRole);
-        }
+        //List<String> activeRoles = getRolesByLoggedInUser(principal);
+        String newRole = user.getRoles() + "," + user_role;
+        user.setRoles(newRole);
         userRepository.save(user);
         return "Hi " + user.getEmail() + ", new Role assigned to you by " + principal.getName();
     }
@@ -80,6 +74,23 @@ public class UserService {
         userRepository.deleteById(user_id);
         return "User with id: "+ user_id + " is deleted";
     }
+
+    private String AutoPassword() {
+        String upper="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lower="abcdefghijklmnopqrstuvwxyz";
+        String num="0123456789";
+        String specialChars="<>,. ?/}]{]+_-) (*&^%$#@!=";
+        String combination=upper+lower+specialChars+num;
+        int len = 8;
+        char[] password=new char[len];
+        Random r = new Random();
+        for(int i=0;i<len;i++) {
+            password[i]=combination.charAt(r.nextInt(combination.length()));
+        }
+        return new String(password);
+    }
+
+    /*
 
     private List<String> getRolesByLoggedInUser(Principal principal) {
         String roles = getLoggedInUser(principal).getRoles();
@@ -96,4 +107,6 @@ public class UserService {
     private User getLoggedInUser(Principal principal) {
         return userRepository.findByEmail(principal.getName()).get();
     }
+
+     */
 }
