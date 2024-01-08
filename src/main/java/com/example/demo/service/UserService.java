@@ -39,9 +39,24 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public String changeRole(int userId, String userRole, Principal principal)
+    public String updatePassword(int user_id, String password, String first_name, String last_name) {
+        Optional<User> optUser = userRepository.findById(user_id);
+        if(optUser.isEmpty()) {
+            throw new RuntimeException("given User doesn't exist");
+        }
+
+        User user = optUser.get();
+        String encryptedPwd = passwordEncoder.encode(password);
+        user.setPassword(encryptedPwd);
+        user.setFirst_name(first_name);
+        user.setLast_name(last_name);
+        userRepository.save(user);
+        return "Successfully updated password for "+ first_name + " " + last_name;
+    }
+
+    public String changeRole(int user_id, String userRole, Principal principal)
     {
-        Optional<User> optUser = userRepository.findById(userId);
+        Optional<User> optUser = userRepository.findById(user_id);
         if(optUser.isEmpty()) {
             throw new RuntimeException("given User doesn't exist");
         }
@@ -57,9 +72,13 @@ public class UserService {
         return "Hi " + user.getEmail() + ", new Role assigned to you by " + principal.getName();
     }
 
-    public String deleteUser(int userId) {
-        // write your logic
-        return "User with id: "+ userId + "is deleted";
+    public String deleteUser(int user_id) {
+        Optional<User> optUser = userRepository.findById(user_id);
+        if(optUser.isEmpty()) {
+            throw new RuntimeException("given User doesn't exist");
+        }
+        userRepository.deleteById(user_id);
+        return "User with id: "+ user_id + " is deleted";
     }
 
     private List<String> getRolesByLoggedInUser(Principal principal) {
